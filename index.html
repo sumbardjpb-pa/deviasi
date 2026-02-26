@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login Monitoring Deviasi</title>
+
+<style>
+body{
+  font-family: Arial;
+  margin:0;
+  background:#eef3f8;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+  background:#4e73a8;
+  color:white;
+  font-size:20px;
+  font-weight:bold;
+}
+
+/* CONTAINER */
+.container{
+  max-width:450px;
+  margin:60px auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  padding:30px;
+  border-radius:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-group{
+  margin-bottom:20px;
+}
+
+label{
+  display:block;
+  margin-bottom:6px;
+  font-weight:bold;
+  color:#4e73a8;
+}
+
+input{
+  width:95%;
+  padding:10px;
+  border-radius:6px;
+  border:1px solid #d1d3e2;
+  font-size:14px;
+}
+
+button{
+  width:100%;
+  padding:10px;
+  border:none;
+  border-radius:6px;
+  background:#4e73a8;
+  color:white;
+  font-size:15px;
+  cursor:pointer;
+  font-weight:bold;
+}
+
+button:hover{
+  background:#2e59d9;
+}
+
+.footer-text{
+  text-align:center;
+  margin-top:15px;
+  font-size:13px;
+  color:#777;
+}
+
+@media(max-width:768px){
+  .container{
+    margin:30px 15px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  Monitoring Deviasi
+</div>
+
+<div class="container">
+  <div class="card">
+
+    <div class="form-group">
+      <label>Kode Satker</label>
+      <input type="text" id="satkerInput" placeholder="Masukkan Kode Satker">
+    </div>
+
+    <button onclick="login()">Login</button>
+
+    <div class="footer-text">
+      @Kanwil DJPb Sumbar 2026
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+function login(){
+  const satker = document.getElementById("satkerInput").value.trim();
+
+  if(!satker){
+    alert("Kode Satker wajib diisi");
+    return;
+  }
+
+  localStorage.setItem("satker", satker);
+  window.location.href = "dashboard.html";
+}
+
+</script>
+
+</body>
+</html>

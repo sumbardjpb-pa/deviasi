@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Monitoring Deviasi</title>
+
+<style>
+body{
+  font-family: Arial;
+  margin:0;
+  background:#eef3f8;
+}
+
+/* HEADER */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:15px 25px;
+  background:#4e73a8;
+  color:white;
+}
+
+.logout-btn{
+  background:#d9534f;
+  border:none;
+  padding:8px 15px;
+  color:white;
+  cursor:pointer;
+  border-radius:4px;
+}
+
+/* CONTAINER */
+.container{
+  max-width:1100px;
+  margin:auto;
+  padding:20px;
+}
+
+.card{
+  background:white;
+  padding:20px;
+  border-radius:8px;
+  box-shadow:0 2px 8px rgba(0,0,0,0.1);
+}
+
+.satker-title{
+  font-size:18px;
+  font-weight:bold;
+  margin-bottom:10px;
+}
+
+.periode-select{
+  margin-bottom:20px;
+}
+
+select{
+  padding:6px 10px;
+  font-size:14px;
+}
+
+/* GRID */
+.row{
+  display:flex;
+  gap:20px;
+  flex-wrap:wrap;
+}
+
+.col{
+  flex:1;
+  min-width:300px;
+}
+
+.section h3{
+  margin-bottom:10px;
+  color:#4e73a8;
+}
+
+.box{
+  background:#f8f9fc;
+  padding:12px;
+  border-radius:6px;
+  border:1px solid #d1d3e2;
+  line-height:1.8;
+}
+
+/* Warna Deviasi */
+.hijau{
+  color:green;
+}
+
+.merah{
+  color:red;
+}
+
+/* Warning */
+.warning{
+  padding:15px;
+  border-radius:6px;
+  font-weight:bold;
+  height:83%;
+}
+
+.warning-merah{
+  background:#f8d7da;
+  border:1px solid #f5c6cb;
+  color:#721c24;
+}
+
+.warning-hijau{
+  background:#d4edda;
+  border:1px solid #c3e6cb;
+  color:#155724;
+}
+
+@media(max-width:768px){
+  .row{
+    flex-direction:column;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div>Monitoring Deviasi</div>
+  <button class="logout-btn" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+  <div class="card">
+
+    <div class="satker-title" id="infoSatker"></div>
+
+    <div class="periode-select">
+      <label>Pilih Periode: </label>
+      <select id="periodeSelect"></select>
+    </div>
+
+    <!-- RENCANA & REALISASI -->
+    <div class="row">
+      <div class="col">
+        <div class="section">
+          <h3>Rencana</h3>
+          <div class="box" id="rencana"></div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div class="section">
+          <h3>Realisasi</h3>
+          <div class="box" id="realisasi"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEVIASI & WARNING -->
+    <div class="row" style="margin-top:20px;">
+      <div class="col">
+        <div class="section">
+          <h3>Deviasi ( % & Nominal )</h3>
+          <div class="box" id="deviasiGabungan"></div>
+        </div>
+      </div>
+
+      <div class="col">
+        <div id="warningBox" class="warning" style="display:none;"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+const API_URL = "https://script.google.com/macros/s/AKfycbzO0BZ9UQyRoQD_nw9Q_1T8B_x0fU7eKK46a0rsFFiL1Rm4RZzwBx3wo_QK_lVakZM/exec";
+
+const satker = localStorage.getItem("satker");
+
+if(!satker){
+  window.location.href = "index.html";
+}
+
+const bulan = [
+  "Januari","Februari","Maret","April","Mei","Juni",
+  "Juli","Agustus","September","Oktober","November","Desember"
+];
+
+const select = document.getElementById("periodeSelect");
+
+bulan.forEach((b,i)=>{
+  const option = document.createElement("option");
+  option.value = i+1;
+  option.textContent = b;
+  select.appendChild(option);
+});
+
+const bulanSekarang = new Date().getMonth() + 1;
+select.value = bulanSekarang;
+
+loadData(bulanSekarang);
+
+select.addEventListener("change", function(){
+  loadData(this.value);
+});
+
+function showLoading(){
+  const loadingText = "<div style='color:#4e73a8;font-style:italic;'>Sedang Load Data...</div>";
+  document.getElementById("rencana").innerHTML = loadingText;
+  document.getElementById("realisasi").innerHTML = loadingText;
+  document.getElementById("deviasiGabungan").innerHTML = loadingText;
+  document.getElementById("warningBox").style.display="none";
+}
+
+function loadData(periode){
+
+  showLoading();
+
+  fetch(`${API_URL}?action=getData&satker=${satker}&periode=${periode}`)
+  .then(res=>res.json())
+  .then(data=>{
+
+    if(data.status !== "ok"){
+      document.getElementById("rencana").innerHTML = "Data tidak ditemukan";
+      document.getElementById("realisasi").innerHTML = "";
+      document.getElementById("deviasiGabungan").innerHTML = "";
+      return;
+    }
+
+    document.getElementById("infoSatker").innerHTML =
+      `Satker: ${data.kodeSatker} - ${data.namaSatker}`;
+
+    tampilkanRupiah("rencana", data.rencana);
+    tampilkanRupiah("realisasi", data.realisasi);
+    tampilkanDeviasiGabungan(data.deviasiNominal, data.deviasiPersen);
+  })
+  .catch(err=>{
+    document.getElementById("rencana").innerHTML = "Gagal memuat data";
+    document.getElementById("realisasi").innerHTML = "";
+    document.getElementById("deviasiGabungan").innerHTML = "";
+  });
+}
+
+function tampilkanRupiah(id, obj){
+  let html="";
+  for(let k in obj){
+    const boldKode = (k=="51"||k=="52"||k=="53"||k=="57");
+    html += `
+      <div>
+        <span style="${boldKode ? 'font-weight:bold;' : ''}">${k}</span> :
+        <span>Rp ${format(obj[k])}</span>
+      </div>
+    `;
+  }
+  document.getElementById(id).innerHTML = html;
+}
+
+function tampilkanDeviasiGabungan(nominal, persen){
+
+  let html="";
+  let adaDeviasi=false;
+
+  for(let k in nominal){
+
+    let nilaiNominal = nominal[k];
+    let nilaiPersen = persen[k];
+
+    if(nilaiNominal > 0) adaDeviasi=true;
+
+    const warna = nilaiNominal==0 ? "hijau" : "merah";
+    const boldKode = (k=="51"||k=="52"||k=="53"||k=="57");
+
+    html += `
+      <div class="${warna}">
+        <span style="${boldKode ? 'font-weight:bold;' : ''}">${k}</span> :
+        <span>${format(nilaiPersen)} % : Rp ${format(nilaiNominal)}</span>
+      </div>
+    `;
+  }
+
+  document.getElementById("deviasiGabungan").innerHTML = html;
+
+  const warningBox = document.getElementById("warningBox");
+  warningBox.style.display="block";
+
+  if(adaDeviasi){
+    warningBox.className="warning warning-merah";
+    warningBox.innerHTML="Masih terdapat deviasi pada periode tersebut, segera lakukan langkah-langkah pengurangan Deviasi (belanja, revisi dst).";
+  }else{
+    warningBox.className="warning warning-hijau";
+    warningBox.innerHTML="Terima Kasih deviasinya tidak ada, Anda sudah mendukung kinerja pelaksanaan anggaran dengan Optimal";
+  }
+}
+
+function format(x){
+  return new Intl.NumberFormat("id-ID").format(x);
+}
+
+function logout(){
+  localStorage.clear();
+  window.location.href="index.html";
+}
+
+</script>
+</body>
+</html>
