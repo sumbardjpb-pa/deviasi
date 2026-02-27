@@ -12,7 +12,6 @@ body{
   background:#eef3f8;
 }
 
-/* HEADER */
 .header{
   display:flex;
   justify-content:center;
@@ -24,7 +23,6 @@ body{
   font-weight:bold;
 }
 
-/* CONTAINER */
 .container{
   max-width:450px;
   margin:60px auto;
@@ -38,9 +36,7 @@ body{
   box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
-.form-group{
-  margin-bottom:20px;
-}
+.form-group{margin-bottom:20px}
 
 label{
   display:block;
@@ -69,9 +65,7 @@ button{
   font-weight:bold;
 }
 
-button:hover{
-  background:#2e59d9;
-}
+button:hover{background:#2e59d9}
 
 .footer-text{
   text-align:center;
@@ -81,9 +75,7 @@ button:hover{
 }
 
 @media(max-width:768px){
-  .container{
-    margin:30px 15px;
-  }
+  .container{margin:30px 15px}
 }
 </style>
 </head>
@@ -112,19 +104,39 @@ button:hover{
 </div>
 
 <script>
-
 function login(){
-  const satker = document.getElementById("satkerInput").value.trim();
+  let satker = document.getElementById("satkerInput").value.trim();
 
   if(!satker){
     alert("Kode Satker wajib diisi");
     return;
   }
 
+  // hapus nol depan
+  satker = satker.replace(/^0+/, "");
+
+  if(!satker){
+    alert("Kode Satker tidak valid");
+    return;
+  }
+
+  // =====================
+  // LOGIN ADMIN
+  // =====================
+  if(satker === "123456"){
+    localStorage.setItem("isAdmin","1");
+    localStorage.removeItem("satker");
+    window.location.href = "admin.html";
+    return;
+  }
+
+  // =====================
+  // LOGIN USER BIASA
+  // =====================
   localStorage.setItem("satker", satker);
+  localStorage.removeItem("isAdmin");
   window.location.href = "dashboard.html";
 }
-
 </script>
 
 </body>
